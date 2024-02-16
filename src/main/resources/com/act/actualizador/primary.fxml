@@ -1,16 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Button?>
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
 
-<VBox alignment="CENTER" spacing="20.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.act.actualizador.PrimaryController">
+<VBox alignment="CENTER" prefHeight="300.0" prefWidth="600.0" spacing="20.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.act.actualizador.PrimaryController">
    <children>
-      <Label text="Primary View" />
-      <Button fx:id="primaryButton" text="Switch to Secondary View" onAction="#switchToSecondary"/>
+      <AnchorPane>
+         <children>
+            <Label layoutX="186.0" layoutY="-7.0" prefHeight="30.0" prefWidth="175.0" text="Actulalizando..." textFill="#434343" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <font>
+                  <Font name="System Bold" size="15.0" />
+               </font>
+            </Label>
+            <ProgressBar fx:id="barraProgreso" prefHeight="30.0" progress="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0" />
+            <Button fx:id="botonMinimizar" layoutX="466.0" layoutY="-2.0" mnemonicParsing="false" onMouseClicked="#minimizar" prefHeight="25.0" prefWidth="25.0" AnchorPane.rightAnchor="35.0" AnchorPane.topAnchor="10.0">
+               <graphic>
+                  <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                     <children>
+                        <Line endX="100.0" startX="90.0" stroke="#434343" strokeWidth="3.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="8.0" />
+                     </children>
+                  </AnchorPane>
+               </graphic>
+            </Button>
+            <Button fx:id="botonCerrar" layoutX="388.0" layoutY="14.0" mnemonicParsing="false" onMouseClicked="#cerrar" prefHeight="25.0" prefWidth="25.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10.0">
+               <graphic>
+                  <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                     <children>
+                        <Line endX="100.0" rotate="-45.0" startX="90.0" stroke="#434343" strokeWidth="3.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="8.0" />
+                        <Line endX="100.0" rotate="45.0" startX="90.0" stroke="#434343" strokeWidth="3.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="8.0" />
+                     </children>
+                  </AnchorPane>
+               </graphic>
+            </Button>
+         </children>
+      </AnchorPane>
+      <TextArea fx:id="textAreaMensaje" prefHeight="200.0" prefWidth="200.0" />
    </children>
    <padding>
-      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+      <Insets bottom="20.0" left="10.0" right="10.0" />
    </padding>
 </VBox>

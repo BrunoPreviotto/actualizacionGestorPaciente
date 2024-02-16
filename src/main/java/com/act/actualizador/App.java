@@ -1,5 +1,8 @@
 package com.act.actualizador;
 
+import com.act.actualizador.dao.Consultas;
+import com.act.actualizador.servicios.ActualizarApp;
+import com.act.actualizador.servicios.ConexionMariadb;
 import java.io.File;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -12,6 +15,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.StageStyle;
@@ -34,138 +40,148 @@ public class App extends Application {
     
     @Override
     public void start(Stage stage) throws IOException {
-         FXMLLoader Loader = new FXMLLoader(App.class.getResource( "primary.fxml"));
-         Parent root = Loader.load();
+        FXMLLoader Loader = new FXMLLoader(App.class.getResource("primary.fxml"));
+        
+
+        Parent root = Loader.load();
         scene = new Scene(root);
-        
+
         //scene = new Scene(loadFXML("primary"), 640, 480);
-       
-       
-        
         stage.setScene(scene);
-        
-        
-        
-        
-        
+
         //scenePrincipal.setFill(Color.TRANSPARENT);
         stage.setScene(scene);
         //stage.initStyle(StageStyle.TRANSPARENT);
         stage.isResizable();
-       // Image imagenIocono = new Image(getClass().getResourceAsStream("/com/pacientes/gestor_pacientes/img/icono.png"));
+        // Image imagenIocono = new Image(getClass().getResourceAsStream("/com/pacientes/gestor_pacientes/img/icono.png"));
+
+        stage.setOnCloseRequest(event -> Platform.exit());
+        // stage.getIcons().add(imagenIocono);
+        stage.show();
+        PrimaryController ps = Loader.getController();
+        
+        iniciarTarea(ps.getBarraProgreso(), ps, stage);
+        
+        
+    }
+    
+    public void actualizarAppDesdeMain(PrimaryController ps, Stage stage){
+        
+        
        
-       // stage.getIcons().add(imagenIocono);
-         
-        String texto;
         try {
-            Stage primaryStage = new Stage();
+            ActualizarApp actualizar = new ActualizarApp();
+            Consultas consulta = new Consultas();
 
-            // Crear el selector de directorios
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Seleccionar Directorio");
-
-            // Mostrar el diálogo y obtener el directorio seleccionado
-            File selectedDirectory = directoryChooser.showDialog(primaryStage);
-            String carpetaDestino = selectedDirectory.getPath();
-
+            String carpetaDestino = consulta.obtenerRutaActualizarApp();
             String urlRepositorio = "https://github.com/BrunoPreviotto/Gestor_Pacientes.git";
-            stage.show();
-            //Thread.sleep(5000);
-            //texto = "Limpiar: " + limpiarDirectorio(carpetaDestino);
-            //clonarRepositorio(urlRepositorio, carpetaDestino);
-            //texto = "Bien";
-            //Thread.sleep(5000);
-            texto = "\n Contruir: " + construir(carpetaDestino);
+
+            Thread.sleep(5000);
+            actualizar.limpiarDirectorio(carpetaDestino);
+            actualizar.clonarRepositorio(urlRepositorio, carpetaDestino);
             
+            Thread.sleep(5000);
+            ps.rellerarMensajeTextArea(actualizar.construir(carpetaDestino));
+            
+            
+          } catch (Exception e) {
+            mensajeError(e.getMessage());
+            e.printStackTrace();
+            
+        }
+       
+         //ps.iniciar(stage, texto);
+    }
+    
+    public void mensajeError(String textoError) {
+        try {
+            FXMLLoader loaderError = new FXMLLoader(App.class.getResource("secondary.fxml"));
+            Parent rootError = loaderError.load();
+            Scene sceneDos = new Scene(rootError);
+            Stage stage = new Stage();
+            //scene = new Scene(loadFXML("primary"), 640, 480);
+            stage.setScene(sceneDos);
+            stage.show();
+
+            //scenePrincipal.setFill(Color.TRANSPARENT);
+            stage.setScene(sceneDos);
+            //stage.initStyle(StageStyle.TRANSPARENT);
+
+            SecondaryController sc = new SecondaryController();
+            sc.iniciarTextoErro(textoError + "\n");
         } catch (Exception e) {
             e.printStackTrace();
-            texto = e.getMessage() + "\n";
         }
-        
-        PrimaryController ps = Loader.getController();
-        ps.iniciar(stage, texto);
-        
     }
     
-    public String construir(String ruta) {
-        // Configurar la solicitud de invocación
-        InvocationRequest request = new DefaultInvocationRequest();
-        
-        System.out.println(ruta);
-        
-        
-        request.setBaseDirectory(new File(ruta));
-        //request.setPomFile(new File(ruta + "pom.xml")); // Ruta al archivo pom.xml de tu proyecto
-        request.setGoals(Arrays.asList("clean", "install")); // Definir las metas Maven: clean install
+   /* private void iniciarTarea(ProgressBar progressBar, PrimaryController ps, Stage stage) {
+        // Crear una tarea (Task) para realizar la función en segundo plano
+        Task<Void> tarea = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                // Obtener el tiempo de inicio
+                long tiempoInicio = System.currentTimeMillis();
 
-        // Configurar el invocador
-        DefaultInvoker invoker = new DefaultInvoker();
-        
-        invoker.setMavenHome(new File("C:\\Users\\previotto\\Documents\\apache-maven-3.9.6"));
-        
-        try {
-            // Invocar Maven y obtener el resultado
-            InvocationResult result = invoker.execute(request);
+                // Llamar a la función cuyo tiempo de ejecución deseas medir
+                actualizarAppDesdeMain(ps, stage);
 
-            // Verificar el resultado
-            if (result.getExitCode() == 0) {
-                return"Proyecto Maven limpio e instalado exitosamente.";
-            } else {
-                return "Error al limpiar e instalar el proyecto Maven. Código de salida: " + result.getExitCode() + "\n" + result.getExecutionException();
-            }
-        } catch (Exception e) {
-            return e.getMessage();
-        }
-    }
-    
-    
-    /* private static void limpiarDirectorio(String rutaDirectorio) throws IOException {
-        File directorio = new File(rutaDirectorio);
-        if (directorio.exists()) {
-            FileUtils.deleteDirectory(directorio);
-            System.out.println("Directorio limpiado: " + directorio);
-        } else {
-            System.out.println("El directorio no existe: " + directorio);
-        }
-    }*/
-     
-     private String limpiarDirectorio(String rutaDirectorio) throws IOException {
-        File directorio = new File(rutaDirectorio);
-        if (directorio.exists() && directorio.isDirectory()) {
-            limpiarContenidoDirectorio(directorio);
-            return "Contenido del directorio limpiado: " + directorio;
-        } else {
-            return "El directorio no existe o no es un directorio válido: " + directorio;
-        }
-    }
-     
-     private static void limpiarContenidoDirectorio(File directorio) throws IOException {
-        File[] archivos = directorio.listFiles();
-        if (archivos != null) {
-            for (File archivo : archivos) {
-                if (archivo.isDirectory()) {
-                    FileUtils.deleteDirectory(archivo);
-                } else {
-                    FileUtils.forceDelete(archivo);
+                // Obtener el tiempo de finalización
+                long tiempoFin = System.currentTimeMillis();
+
+                // Calcular la diferencia de tiempo
+                long tiempoTotal = tiempoFin - tiempoInicio;
+
+                // Actualizar la barra de progreso de manera proporcional al tiempo total
+                for (double progreso = 0.0; progreso <= 1.0; progreso += 0.01) {
+                    updateProgress(progreso, 1.0);  // Actualizar el progreso
+                    Thread.sleep((long) (tiempoTotal * 0.01));  // Ajustar la pausa según el tiempo total
                 }
+
+                // Ejecutar la operación de cierre en el hilo de JavaFX cuando la tarea haya terminado
+                Platform.runLater(() -> {
+                    // Cerrar la aplicación
+                    ((Stage) progressBar.getScene().getWindow()).close();
+                });
+
+                return null;
             }
-        }
+        };
+
+        // Vincular la propiedad de progreso de la barra de progreso con la tarea
+        progressBar.progressProperty().bind(tarea.progressProperty());
+
+        // Configurar la tarea para ejecutarse en un nuevo hilo
+        Thread thread = new Thread(tarea);
+        thread.start();
+        
+        
+        
+    }*/
+    
+    
+    private void iniciarTarea(ProgressBar progressBar, PrimaryController ps, Stage stage) {
+        // Crear una tarea (Task) para realizar la función en segundo plano
+        Task<Void> tarea = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                // Llamar a la función cuyo tiempo de ejecución deseas medir
+                 actualizarAppDesdeMain(ps, stage);
+                return null;
+            }
+        };
+
+        // Vincular la propiedad de progreso de la barra de progreso con la tarea
+        progressBar.progressProperty().bind(tarea.progressProperty());
+
+        // Configurar la tarea para ejecutarse en un nuevo hilo
+        Thread thread = new Thread(tarea);
+        thread.start();
+
+        // Manejar el cierre de la aplicación después de que la tarea haya terminado
+        tarea.setOnSucceeded(event -> Platform.exit());
     }
     
-    private static void clonarRepositorio(String urlRepositorio, String carpetaDestino) throws Exception {
-       Path rutaDestino = Paths.get(carpetaDestino);
-
-        Git.cloneRepository()
-                    .setURI(urlRepositorio)
-                    .setDirectory(rutaDestino.toFile())
-                    .setBranch("master")
-                    .setCloneAllBranches(true)
-                    .setBranchesToClone(Collections.singletonList("refs/heads/master"))
-                    .call();
-     
-
-        System.out.println("Clonación exitosa del repositorio en la carpeta: " + rutaDestino);
-    }
+    
     
 
     static void setRoot(String fxml) throws IOException {
