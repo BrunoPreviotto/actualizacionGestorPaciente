@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
@@ -40,6 +41,9 @@ public class App extends Application {
     
     @Override
     public void start(Stage stage) throws IOException {
+        System.setProperty("user.dir", "C:\\Users\\Public\\App_gestor_pacientes\\Act\\Actualizador\\actualizacionGestorPaciente\\target");
+        
+        
         FXMLLoader Loader = new FXMLLoader(App.class.getResource("primary.fxml"));
         
 
@@ -59,38 +63,59 @@ public class App extends Application {
         // stage.getIcons().add(imagenIocono);
         stage.show();
         PrimaryController ps = Loader.getController();
-        
+        ps.iniciar();
         iniciarTarea(ps.getBarraProgreso(), ps, stage);
         
         
     }
     
-    public void actualizarAppDesdeMain(PrimaryController ps, Stage stage){
-        
-        
-       
+    public void actualizarAppDesdeMain(PrimaryController ps, Stage stage) {
+
+        String texto = "";
+
         try {
-            ActualizarApp actualizar = new ActualizarApp();
-            Consultas consulta = new Consultas();
+            if(Os.isFamily(Os.FAMILY_WINDOWS)){
+                ActualizarApp actualizar = new ActualizarApp();
+                Consultas consulta = new Consultas();
 
-            String carpetaDestino = consulta.obtenerRutaActualizarApp();
-            String urlRepositorio = "https://github.com/BrunoPreviotto/Gestor_Pacientes.git";
+                String carpetaDestino = consulta.obtenerRutaActualizarApp();
+                String urlRepositorio = "https://github.com/BrunoPreviotto/Gestor_Pacientes.git";
 
-            Thread.sleep(5000);
-            actualizar.limpiarDirectorio(carpetaDestino);
-            actualizar.clonarRepositorio(urlRepositorio, carpetaDestino);
+                Thread.sleep(5000);
+                texto = actualizar.mvnClean(carpetaDestino + "\\gestor_pacientes");
+                ps.rellerarMensajeTextArea(texto);
+
+                texto = actualizar.VaciarDirectorio(carpetaDestino + "\\gestor_pacientes", "target");
+                ps.rellerarMensajeTextArea(texto);
+
+                texto = "\n" + actualizar.clonarRepositorio(urlRepositorio, carpetaDestino + "\\paso\\gestor_pacientes");
+                ps.rellerarMensajeTextArea(texto);
+
+                texto = "\n" + actualizar.construir(carpetaDestino + "\\paso\\gestor_pacientes");
+                ps.rellerarMensajeTextArea(texto);
+
+                texto = "\n" + actualizar.MoverContenidoCarpeta(carpetaDestino + "\\paso\\gestor_pacientes\\target",
+                        carpetaDestino + "\\gestor_pacientes\\target", List.of(""));
+                ps.rellerarMensajeTextArea(texto);
+
+                texto = "\n" + actualizar.MoverContenidoCarpeta(carpetaDestino + "\\paso\\gestor_pacientes",
+                        carpetaDestino + "\\gestor_pacientes", List.of("target", ".git"));
+                ps.rellerarMensajeTextArea(texto);
+
+                texto = "\n" + actualizar.VaciarDirectorio(carpetaDestino + "\\paso\\gestor_pacientes", ".git");
+                ps.rellerarMensajeTextArea(texto);
+            }
             
-            Thread.sleep(5000);
-            ps.rellerarMensajeTextArea(actualizar.construir(carpetaDestino));
             
             
-          } catch (Exception e) {
+        } catch (Exception e) {
             mensajeError(e.getMessage());
             e.printStackTrace();
-            
+
+            ps.rellerarMensajeTextArea(e.getMessage());
         }
-       
-         //ps.iniciar(stage, texto);
+
+        //ps.iniciar(stage, texto);
     }
     
     public void mensajeError(String textoError) {
@@ -114,49 +139,7 @@ public class App extends Application {
         }
     }
     
-   /* private void iniciarTarea(ProgressBar progressBar, PrimaryController ps, Stage stage) {
-        // Crear una tarea (Task) para realizar la función en segundo plano
-        Task<Void> tarea = new Task<>() {
-            @Override
-            protected Void call() throws Exception {
-                // Obtener el tiempo de inicio
-                long tiempoInicio = System.currentTimeMillis();
-
-                // Llamar a la función cuyo tiempo de ejecución deseas medir
-                actualizarAppDesdeMain(ps, stage);
-
-                // Obtener el tiempo de finalización
-                long tiempoFin = System.currentTimeMillis();
-
-                // Calcular la diferencia de tiempo
-                long tiempoTotal = tiempoFin - tiempoInicio;
-
-                // Actualizar la barra de progreso de manera proporcional al tiempo total
-                for (double progreso = 0.0; progreso <= 1.0; progreso += 0.01) {
-                    updateProgress(progreso, 1.0);  // Actualizar el progreso
-                    Thread.sleep((long) (tiempoTotal * 0.01));  // Ajustar la pausa según el tiempo total
-                }
-
-                // Ejecutar la operación de cierre en el hilo de JavaFX cuando la tarea haya terminado
-                Platform.runLater(() -> {
-                    // Cerrar la aplicación
-                    ((Stage) progressBar.getScene().getWindow()).close();
-                });
-
-                return null;
-            }
-        };
-
-        // Vincular la propiedad de progreso de la barra de progreso con la tarea
-        progressBar.progressProperty().bind(tarea.progressProperty());
-
-        // Configurar la tarea para ejecutarse en un nuevo hilo
-        Thread thread = new Thread(tarea);
-        thread.start();
-        
-        
-        
-    }*/
+   
     
     
     private void iniciarTarea(ProgressBar progressBar, PrimaryController ps, Stage stage) {
@@ -165,7 +148,9 @@ public class App extends Application {
             @Override
             protected Void call() throws Exception {
                 // Llamar a la función cuyo tiempo de ejecución deseas medir
-                 actualizarAppDesdeMain(ps, stage);
+                actualizarAppDesdeMain(ps, stage);
+               
+                Thread.sleep(15000);
                 return null;
             }
         };
@@ -179,6 +164,7 @@ public class App extends Application {
 
         // Manejar el cierre de la aplicación después de que la tarea haya terminado
         tarea.setOnSucceeded(event -> Platform.exit());
+        
     }
     
     
