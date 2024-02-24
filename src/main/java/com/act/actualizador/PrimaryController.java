@@ -18,7 +18,7 @@ public class PrimaryController implements Initializable{
 
     
     private VBox vb;
-    private TextArea ta;
+   
     @FXML
     private ProgressBar barraProgreso;
     @FXML
@@ -35,21 +35,21 @@ public class PrimaryController implements Initializable{
     }
     
     public void rellerarMensajeTextArea(String texto){
-        this.textAreaMensaje.setText(texto);
+        
+        this.textAreaMensaje.appendText(texto);
     }
     
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        TextArea ta = new TextArea();
+       
         
         
     }
     
-    public void iniciar(Stage stage, String texto){
-       vb = (VBox)stage.getScene().getRoot();
-       ta = new TextArea(texto);
-       vb.getChildren().add(ta);
+    public void iniciar(){
+       textAreaMensaje.editableProperty().set(false);
+       textAreaMensaje.setStyle("-fx-text-fill: blue; -fx-font-weight: bold;");
     }
 
     @FXML
